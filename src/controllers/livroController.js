@@ -1,15 +1,13 @@
-import { autor } from "../models/Autor.js";
+import NaoEncontrado from "../erros/naoEncontrado.js";
 import livro from "../models/Livro.js";
 
 class LivroController {
-  static async listarLivros(req, res) {
+  static async listarLivros(req, res, next) {
     try {
-      const listaLivros = await livro.find({});
+      const listaLivros = await livro.find();
       res.status(200).json(listaLivros);
     } catch (e) {
-      res
-        .status(500)
-        .json({ message: `${e.message} - falha ao buscar livros` });
+      next(e);
     }
   }
 
@@ -24,17 +22,21 @@ class LivroController {
   };
  */
 
-  static async listarLivroPorId(req, res) {
+  static async listarLivroPorId(req, res, next) {
     try {
       const id = req.params.id;
       const data = await livro.findById(id);
-      res.status(200).json(data);
+      if (data !== null) {
+        res.status(200).json(data);
+      } else {
+        next(new NaoEncontrado("autor não encontrado"));
+      }
     } catch (e) {
-      res.status(500).json({ message: `${e.message} - falha ao buscar livro` });
+      next(e);
     }
   }
 
-  static async cadastrarLivro(req, res) {
+  /* static async cadastrarLivro(req, res, next) {
     const novoLivro = req.body;
     try {
       const autorEncontrado = await autor.findById(novoLivro.autor);
@@ -47,48 +49,58 @@ class LivroController {
         .status(201)
         .json({ message: "criado com sucesso", livro: livroCriado });
     } catch (e) {
-      res
-        .status(500)
-        .json({ message: `${e.message} - falha ao cadastrar livro` });
+      next(e);
     }
-  }
+  } */
   // exemplo usando reference
-  /* static async cadastrarLivro (req, res) {
+  static async cadastrarLivro(req, res, next) {
     try {
       const novoLivro = await livro.create(req.body);
       res.status(201).json({ message: "criado com sucesso", livro: novoLivro });
     } catch (erro) {
-      res.status(500).json({ message: `${erro.message} - falha ao cadastrar livro` });
-    }
-  } */
-
-  static async atualizaLivro(req, res) {
-    try {
-      const id = req.params.id;
-      await livro.findByIdAndUpdate(id, req.body);
-      res.status(200).json({ message: "livro atualizado" });
-    } catch (e) {
-      res.status(500).json({ message: `${e.message} - falha na atualização` });
+      next(erro);
     }
   }
 
-  static async deletaLivro(req, res) {
+  static async atualizaLivro(req, res, next) {
     try {
       const id = req.params.id;
-      await livro.findByIdAndDelete(id);
-      res.status(200).json({ message: "livro deletado" });
+      const data = await livro.findByIdAndUpdate(id, req.body);
+      if (data !== null) {
+        res.status(200).json({ message: "livro atualizado" });
+      } else {
+        next(new NaoEncontrado("autor não encontrado"));
+      }
     } catch (e) {
-      res.status(500).json({ message: `${e.message} - falha no deletar` });
+      next(e);
     }
   }
 
-  static async listarLivrosPorEditora(req, res) {
+  static async deletaLivro(req, res, next) {
+    try {
+      const id = req.params.id;
+      const data = await livro.findByIdAndDelete(id);
+      if (data !== null) {
+        res.status(200).json({ message: "livro deletado" });
+      } else {
+        next(new NaoEncontrado("autor não encontrado"));
+      }
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async listarLivrosPorEditora(req, res, next) {
     const editora = req.query.editora;
     try {
       const livrosPorEditora = await livro.find({ editora: editora });
-      res.status(200).json(livrosPorEditora);
+      if (livrosPorEditora.length > 0) {
+        res.status(200).json(livrosPorEditora);
+      } else {
+        next(new NaoEncontrado("editora não encontrada"));
+      }
     } catch (e) {
-      res.status(500).json({ message: `${e.message} - falha na busca` });
+      next(e);
     }
   }
 }
