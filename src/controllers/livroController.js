@@ -93,25 +93,28 @@ class LivroController {
   static async listarLivrosPorFiltro(req, res, next) {
     const { editora, titulo, minPaginas, maxPaginas, nomeAutor } = req.query;
     try {
-      const data = await autor.findOne({
-        nome: nomeAutor,
-      });
+      let busca = {};
+      let data = {};
 
-      const livrosFiltro = await livro.find({
-        $or: [
-          { editora: { $regex: `${editora}`, $options: "i" } },
-          { titulo: { $regex: `${titulo}`, $options: "i" } },
-        ],
-        $or: [
-          { paginas: { $gte: minPaginas } },
-          { paginas: { $lte: maxPaginas } },
-        ],
-        $or: [{ autor: data._id }],
-      });
-      if (livrosFiltro.length > 0) {
+      if (editora) busca.editora = { $regex: editora };
+      if (titulo) busca.titulo = { $regex: titulo };
+      if (minPaginas) busca.paginas = { $gte: minPaginas };
+      if (maxPaginas) busca.paginas = { $lte: maxPaginas };
+      if (nomeAutor) {
+        data = await autor.findOne({
+          nome: nomeAutor,
+        });
+        if (data !== null) {
+          busca.autor = data._id;
+        } else {
+          busca = null;
+        }
+      }
+      if (busca !== null) {
+        const livrosFiltro = await livro.find(busca).populate("autor");
         res.status(200).json(livrosFiltro);
       } else {
-        next(new NaoEncontrado("livros não encontrado"));
+        res.status(200).send([]);
       }
     } catch (e) {
       next(e);
