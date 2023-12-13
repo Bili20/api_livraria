@@ -4,20 +4,12 @@ import { autor, livro } from "../models/index.js";
 
 class LivroController {
   static async listarLivros(req, res, next) {
-    const { limite = 5, pagina = 1, ordenacao = "_id:-1" } = req.query;
     try {
-      if (limite > 0 && pagina > 0) {
-        let [campoOrdenacao, ordem] = ordenacao.split(":");
+      const data = livro.find();
 
-        const listaLivros = await livro
-          .find()
-          .sort({ [campoOrdenacao]: ordem })
-          .limit(limite)
-          .skip((pagina - 1) * limite);
-        res.status(200).json(listaLivros);
-      } else {
-        next(new RequisicaoIncorreta());
-      }
+      req.resultado = data;
+
+      next();
     } catch (e) {
       next(e);
     }
@@ -123,8 +115,11 @@ class LivroController {
         }
       }
       if (busca !== null) {
-        const livrosFiltro = await livro.find(busca).populate("autor");
-        res.status(200).json(livrosFiltro);
+        const livrosFiltro = livro.find(busca).populate("autor");
+
+        req.resultado = livrosFiltro;
+
+        next();
       } else {
         res.status(200).send([]);
       }
