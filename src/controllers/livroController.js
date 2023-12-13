@@ -1,5 +1,5 @@
 import NaoEncontrado from "../erros/naoEncontrado.js";
-import livro from "../models/Livro.js";
+import { autor, livro } from "../models/index.js";
 
 class LivroController {
   static async listarLivros(req, res, next) {
@@ -90,14 +90,28 @@ class LivroController {
     }
   }
 
-  static async listarLivrosPorEditora(req, res, next) {
-    const editora = req.query.editora;
+  static async listarLivrosPorFiltro(req, res, next) {
+    const { editora, titulo, minPaginas, maxPaginas, nomeAutor } = req.query;
     try {
-      const livrosPorEditora = await livro.find({ editora: editora });
-      if (livrosPorEditora.length > 0) {
-        res.status(200).json(livrosPorEditora);
+      const data = await autor.findOne({
+        nome: nomeAutor,
+      });
+
+      const livrosFiltro = await livro.find({
+        $or: [
+          { editora: { $regex: `${editora}`, $options: "i" } },
+          { titulo: { $regex: `${titulo}`, $options: "i" } },
+        ],
+        $or: [
+          { paginas: { $gte: minPaginas } },
+          { paginas: { $lte: maxPaginas } },
+        ],
+        $or: [{ autor: data._id }],
+      });
+      if (livrosFiltro.length > 0) {
+        res.status(200).json(livrosFiltro);
       } else {
-        next(new NaoEncontrado("editora não encontrada"));
+        next(new NaoEncontrado("livros não encontrado"));
       }
     } catch (e) {
       next(e);
