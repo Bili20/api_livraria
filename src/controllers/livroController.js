@@ -115,7 +115,7 @@ class LivroController {
         }
       }
       if (busca !== null) {
-        const livrosFiltro = livro.find(busca).populate("autor");
+        const livrosFiltro = livro.find(busca);
 
         req.resultado = livrosFiltro;
 
