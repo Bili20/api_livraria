@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import autopopulate from "mongoose-autopopulate";
 import { autorSchema } from "./Autor.js";
 // usando o embedding para fazer a encorporação de autor com livro
 /* const livroSchema = new mongoose.Schema(
@@ -41,10 +42,14 @@ const livroSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "autores",
       required: true,
+      //autopopulate: true,
+      autopopulate: { select: "nome" },
     },
   },
   { versionKey: false }
 );
+
+livroSchema.plugin(autopopulate);
 
 const livro = mongoose.model("livros", livroSchema);
 
