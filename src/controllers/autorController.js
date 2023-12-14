@@ -2,10 +2,12 @@ import NaoEncontrado from "../erros/naoEncontrado.js";
 import { autor } from "../models/index.js";
 
 class AutorController {
-  static async listarAutor(req, res) {
+  static async listarAutor(req, res, next) {
     try {
-      const listarAutor = await autor.find();
-      res.status(200).json(listarAutor);
+      const listarAutor = autor.find();
+      req.resultado = listarAutor;
+
+      next();
     } catch (e) {
       res.status(500).json({ message: `${e.message} - falha ao buscar autor` });
     }
